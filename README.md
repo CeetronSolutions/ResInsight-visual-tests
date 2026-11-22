@@ -65,6 +65,6 @@ PR stating the producing SHA. Review the images in the nightly report before mer
   reference refresh.
 - Settings required to be set: Git LFS for `*.png` (see `.gitattributes`); repository secret `DEV_BUILDS_READ_TOKEN`
   is only needed if `resinsight-builds` is not publicly readable.
-- Not yet done: 2D plots, more parameters (filters, faults, wells, time step, camera), a
+- Not yet done: ensemble and other 2D plot types, more parameters (filters, faults, wells, time step, camera), a
   double run to detect flaky cases, sharding across jobs. Verify that the published Ubuntu
   zip runs on a clean container (library list in `nightly.yml` is a first guess).

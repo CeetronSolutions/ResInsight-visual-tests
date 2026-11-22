@@ -309,6 +309,12 @@ def well_path_from_points(project, case, view, testmodels):
     _hide_grid(view)
     _look_at_points(view, case, points, margin=1.5)
 
+
+def _import_summary_only(project, view, testmodels):
+    view.delete()  # only the plot should be snapshotted
+    return project.import_summary_case(str(testmodels / SUMMARY))
+
+
 def _fit_multi_plots(project, columns, rows):
     """Use a page layout that matches the number of subplots, so the page has no empty cells."""
     for multi_plot in project.descendants(rips.MultiSummaryPlot):
@@ -320,8 +326,7 @@ def _fit_multi_plots(project, columns, rows):
 @feature("summary_plot")
 def summary_plot(project, case, view, testmodels):
     """Summary plot of the field oil production total (FOPT)."""
-    view.delete()  # only the plot should be snapshotted
-    summary_case = project.import_summary_case(str(testmodels / SUMMARY))
+    summary_case = _import_summary_only(project, view, testmodels)
     collection = project.summary_plot_collection()
     collection.new_summary_plot(summary_cases=[summary_case], address="FOPT")
     _fit_multi_plots(project, rips.NumberOfColumns._1, rips.RowsPerPage._1)
@@ -330,11 +335,99 @@ def summary_plot(project, case, view, testmodels):
 @feature("summary_multi_plot")
 def summary_multi_plot(project, case, view, testmodels):
     """Multi plot with one summary plot per vector (FOPT, FWPT)."""
-    view.delete()  # only the plot should be snapshotted
-    summary_case = project.import_summary_case(str(testmodels / SUMMARY))
+    summary_case = _import_summary_only(project, view, testmodels)
     collection = project.summary_plot_collection()
     collection.new_summary_multi_plot(
         summary_cases=[summary_case], addresses=["FOPT", "FWPT"]
     )
     _fit_multi_plots(project, rips.NumberOfColumns._2, rips.RowsPerPage._1)
 
+
+@feature("summary_plot_multi_vector")
+def summary_plot_multi_vector(project, case, view, testmodels):
+    """Two curves in the same summary plot (WOPR for wells P1 and P2)."""
+    summary_case = _import_summary_only(project, view, testmodels)
+    collection = project.summary_plot_collection()
+    collection.new_summary_plot(
+        summary_cases=[summary_case], address="WOPR:P1;WOPR:P2"
+    )
+    _fit_multi_plots(project, rips.NumberOfColumns._1, rips.RowsPerPage._1)
+
+
+@feature("summary_plot_wildcard")
+def summary_plot_wildcard(project, case, view, testmodels):
+    """Summary plot with one curve per well from a wildcard address (WOPT:*)."""
+    summary_case = _import_summary_only(project, view, testmodels)
+    collection = project.summary_plot_collection()
+    collection.new_summary_plot(summary_cases=[summary_case], address="WOPT:*")
+    _fit_multi_plots(project, rips.NumberOfColumns._1, rips.RowsPerPage._1)
+
+
+@feature("summary_plot_normalized")
+def summary_plot_normalized(project, case, view, testmodels):
+    """FOPT and FWPT in one plot with normalize_curve_y_values = True."""
+    summary_case = _import_summary_only(project, view, testmodels)
+    collection = project.summary_plot_collection()
+    summary_plot = collection.new_summary_plot(
+        summary_cases=[summary_case], address="FOPT;FWPT"
+    )
+    summary_plot.normalize_curve_y_values = True
+    summary_plot.update()
+    _fit_multi_plots(project, rips.NumberOfColumns._1, rips.RowsPerPage._1)
+
+
+@feature("summary_plot_custom_title")
+def summary_plot_custom_title(project, case, view, testmodels):
+    """Summary plot with a custom title (is_using_auto_name = False)."""
+    summary_case = _import_summary_only(project, view, testmodels)
+    collection = project.summary_plot_collection()
+    summary_plot = collection.new_summary_plot(
+        summary_cases=[summary_case], address="FOPT"
+    )
+    summary_plot.is_using_auto_name = False
+    summary_plot.plot_description = "Custom plot title"
+    summary_plot.update()
+    _fit_multi_plots(project, rips.NumberOfColumns._1, rips.RowsPerPage._1)
+
+
+@feature("summary_multi_plot_grid")
+def summary_multi_plot_grid(project, case, view, testmodels):
+    """2x2 multi plot with three subplots created together and a fourth added with append_subplot."""
+    summary_case = _import_summary_only(project, view, testmodels)
+    collection = project.summary_plot_collection()
+    multi_plot = collection.new_summary_multi_plot(
+        summary_cases=[summary_case], addresses=["FOPT", "FWPT", "FOPR"]
+    )
+    multi_plot.append_subplot(summary_cases=[summary_case], address="FWPR")
+    _fit_multi_plots(project, rips.NumberOfColumns._2, rips.RowsPerPage._2)
+
+
+@feature("summary_multi_plot_common_legend")
+def summary_multi_plot_common_legend(project, case, view, testmodels):
+    """Multi plot with two subplots sharing one legend (use_common_legend = True)."""
+    summary_case = _import_summary_only(project, view, testmodels)
+    collection = project.summary_plot_collection()
+    multi_plot = collection.new_summary_multi_plot(
+        summary_cases=[summary_case], addresses=["WOPR:P1;WOPR:P2", "WWPR:P1;WWPR:P2"]
+    )
+    multi_plot.use_common_legend = True
+    multi_plot.update()
+    _fit_multi_plots(project, rips.NumberOfColumns._2, rips.RowsPerPage._1)
+
+
+@feature("well_log_plot", TEST10K)
+def well_log_plot(project, case, view, testmodels):
+    """Well log plot with PORO and PRESSURE extraction curves along an imported well path."""
+    project.import_well_paths([str(testmodels / TEST10K_WELLPATH)])
+    well_path = project.well_paths()[0]
+    # Importing well paths creates a generic 3D view when no view exists
+    for remaining in project.views():
+        remaining.delete()  # only the plot should be snapshotted
+    collection = project.descendants(rips.WellLogPlotCollection)[0]
+    plot = collection.new_well_log_plot(case, well_path)
+    for property_type, name in (
+        (rips.PropertyType.STATIC_NATIVE, "PORO"),
+        (rips.PropertyType.DYNAMIC_NATIVE, "PRESSURE"),
+    ):
+        track = plot.new_well_log_track(name, case, well_path)
+        track.add_extraction_curve(case, well_path, property_type, name, 0)
