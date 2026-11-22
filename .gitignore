@@ -1,0 +1,13 @@
+cases/*/RegressionTest.rsp
+cases/*/RegTestGeneratedImages/
+cases/*/RegTestDiffImages/
+cases/*/RegTestGeneratedFiles/
+bin/
+work/
+run.log
+results.json
+report/
+testmodels/
+__pycache__/
+.pytest_cache/
+cases/*/meta.json
