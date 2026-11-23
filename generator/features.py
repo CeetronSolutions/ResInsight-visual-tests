@@ -363,19 +363,6 @@ def summary_plot_wildcard(project, case, view, testmodels):
     _fit_multi_plots(project, rips.NumberOfColumns._1, rips.RowsPerPage._1)
 
 
-@feature("summary_plot_normalized")
-def summary_plot_normalized(project, case, view, testmodels):
-    """FOPT and FWPT in one plot with normalize_curve_y_values = True."""
-    summary_case = _import_summary_only(project, view, testmodels)
-    collection = project.summary_plot_collection()
-    summary_plot = collection.new_summary_plot(
-        summary_cases=[summary_case], address="FOPT;FWPT"
-    )
-    summary_plot.normalize_curve_y_values = True
-    summary_plot.update()
-    _fit_multi_plots(project, rips.NumberOfColumns._1, rips.RowsPerPage._1)
-
-
 @feature("summary_plot_custom_title")
 def summary_plot_custom_title(project, case, view, testmodels):
     """Summary plot with a custom title (is_using_auto_name = False)."""
@@ -418,11 +405,10 @@ def summary_multi_plot_common_legend(project, case, view, testmodels):
 @feature("well_log_plot", TEST10K)
 def well_log_plot(project, case, view, testmodels):
     """Well log plot with PORO and PRESSURE extraction curves along an imported well path."""
+    # The 3D view stays: the case results are only loaded when a view is opened,
+    # and without them the extraction curves are empty
     project.import_well_paths([str(testmodels / TEST10K_WELLPATH)])
     well_path = project.well_paths()[0]
-    # Importing well paths creates a generic 3D view when no view exists
-    for remaining in project.views():
-        remaining.delete()  # only the plot should be snapshotted
     collection = project.descendants(rips.WellLogPlotCollection)[0]
     plot = collection.new_well_log_plot(case, well_path)
     for property_type, name in (
