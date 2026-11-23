@@ -59,6 +59,11 @@ Run **Update references** (`workflow_dispatch`) with the nightly run ID and an o
 name regex. It copies the generated images of that run into `RegTestBaseImages` and opens a
 PR stating the producing SHA. Review the images in the nightly report before merging.
 
+Each nightly report has an **Update references** panel: tick the cases to promote (not passing
+cases are preselected), then use the button to open the workflow page with the case filter
+copied to the clipboard, or copy a ready-made `gh workflow run` command. GitHub cannot prefill
+`workflow_dispatch` inputs from a URL, so the run ID and filter are pasted manually.
+
 ## Notes and known limits
 
 - Exact matching requires a pinned Mesa. Changing the container image is a deliberate
