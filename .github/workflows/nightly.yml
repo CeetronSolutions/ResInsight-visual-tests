@@ -23,7 +23,7 @@ jobs:
     # A deliberate Mesa/image bump means a deliberate reference refresh.
     container: ubuntu:26.04
     env:
-      GH_TOKEN: ${{ secrets.DEV_BUILDS_READ_TOKEN || github.token }}
+      GH_TOKEN: ${{ github.token }}
       DEBIAN_FRONTEND: noninteractive
     steps:
       - name: Install dependencies

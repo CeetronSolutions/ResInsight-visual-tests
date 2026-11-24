@@ -68,8 +68,8 @@ copied to the clipboard, or copy a ready-made `gh workflow run` command. GitHub 
 
 - Exact matching requires a pinned Mesa. Changing the container image is a deliberate
   reference refresh.
-- Settings required to be set: Git LFS for `*.png` (see `.gitattributes`); repository secret `DEV_BUILDS_READ_TOKEN`
-  is only needed if `resinsight-builds` is not publicly readable.
+- Settings required to be set: Git LFS for `*.png` (see `.gitattributes`). `resinsight-builds` must be publicly
+  readable, since the workflows use the default `github.token`.
 - Not yet done: ensemble and other 2D plot types, more parameters (filters, faults, wells, time step, camera), a
   double run to detect flaky cases, sharding across jobs. Verify that the published Ubuntu
   zip runs on a clean container (library list in `nightly.yml` is a first guess).
