@@ -34,75 +34,6 @@ def _show_pressure(view):
 Z_SCALE = 5.0
 
 
-def _look_at(view, target, direction, distance):
-    """Point the camera at target, looking along direction with world Z as up."""
-    # Camera coordinates are in scaled display space
-    view.grid_z_scale = Z_SCALE
-    d = _normalize(direction)
-    up = (0.0, 0.0, 1.0) if abs(d[2]) < 0.99 else (0.0, 1.0, 0.0)
-    dot = sum(u * c for u, c in zip(up, d))
-    y = _normalize([u - dot * c for u, c in zip(up, d)])
-    z = [-c for c in d]
-    x = [
-        y[1] * z[2] - y[2] * z[1],
-        y[2] * z[0] - y[0] * z[2],
-        y[0] * z[1] - y[1] * z[0],
-    ]
-    eye = [t - c * distance for t, c in zip(target, d)]
-    # The camera matrix is a row-major view matrix (world to camera)
-    view.camera_matrix = [
-        x[0], x[1], x[2], -sum(a * b for a, b in zip(x, eye)),
-        y[0], y[1], y[2], -sum(a * b for a, b in zip(y, eye)),
-        z[0], z[1], z[2], -sum(a * b for a, b in zip(z, eye)),
-        0.0, 0.0, 0.0, 1.0,
-    ]
-    view.camera_point_of_interest = list(target)
-    view.update()
-
-
-def _normalize(v):
-    length = math.sqrt(sum(c * c for c in v))
-    return [c / length for c in v]
-
-
-def _display_offset(case):
-    # Camera coordinates are relative to the center of the main grid, which is
-    # larger than the active cell bounding box
-    centers = case.grid(0).cell_centers()
-    xs = [c.x for c in centers]
-    ys = [c.y for c in centers]
-    # Cell centers report depth, while the scene uses negative depth as z
-    zs = [-c.z for c in centers]
-    return (
-        (min(xs) + max(xs)) / 2,
-        (min(ys) + max(ys)) / 2,
-        (min(zs) + max(zs)) / 2,
-    )
-
-
-def _look_at_points(view, case, points, direction=(0.0, 1.0, -0.6), margin=2.5):
-    xs, ys, zs = zip(*points)
-    cx, cy, cz = _display_offset(case)
-    target = (
-        (min(xs) + max(xs)) / 2 - cx,
-        (min(ys) + max(ys)) / 2 - cy,
-        ((min(zs) + max(zs)) / 2 - cz) * Z_SCALE,
-    )
-    extent = math.dist(
-        (min(xs), min(ys), min(zs) * Z_SCALE), (max(xs), max(ys), max(zs) * Z_SCALE)
-    )
-    _look_at(view, target, direction, max(extent, 100.0) * margin)
-
-
-def _look_at_grid(view, case, direction=(0.0, 1.0, -0.6)):
-    bbox = case.reservoir_boundingbox()
-    corners = [
-        (bbox.min_x, bbox.min_y, bbox.min_z),
-        (bbox.max_x, bbox.max_y, bbox.max_z),
-    ]
-    _look_at_points(view, case, corners, direction, margin=1.4)
-
-
 def _hide_grid(view):
     # Keep a single corner cell so that only well paths and intersections remain visible
     cell_filters = view.descendants(rips.CellFilterCollection)[0]
@@ -114,16 +45,6 @@ def _hide_grid(view):
     cell_range.cell_count_j = 1
     cell_range.cell_count_k = 1
     cell_range.update()
-
-
-def _read_dev_points(path):
-    # Well path files list x, y, depth and md after a name line
-    points = []
-    for line in path.read_text().splitlines()[1:]:
-        values = line.split()
-        if len(values) >= 3:
-            points.append((float(values[0]), float(values[1]), -float(values[2])))
-    return points
 
 
 def _intersect_well(view, well_path):
@@ -214,7 +135,7 @@ def intersection_polyline(project, case, view, testmodels):
         [bbox.max_x, bbox.max_y, z],
     ]
     intersection.update()
-    _look_at_grid(view, case, (0.3, 1.0, -0.5))
+    view.set_camera(azimuth=17.0, tilt=64.0, zoom=1.5)
 
 
 @feature("regular_surface", TEST10K)
@@ -237,7 +158,7 @@ def regular_surface(project, case, view, testmodels):
     surface.rotation = 0.0
     surface.update()
     view.set_surface_visible(surface, True)
-    _look_at_grid(view, case)
+    view.set_camera(azimuth=0.0, tilt=59.0, zoom=1.5)
 
 
 @feature("polygon", TEST10K)
@@ -267,7 +188,7 @@ def well_path_import(project, case, view, testmodels):
     project.import_well_paths([str(testmodels / TEST10K_WELLPATH)])
     well_path = project.well_paths()[0]
     _intersect_well(view, well_path)
-    _look_at_points(view, case, _read_dev_points(testmodels / TEST10K_WELLPATH), margin=2.5)
+    view.set_camera(azimuth=0.0, tilt=59.0)
 
 
 @feature("modeled_well_path", TEST10K)
@@ -287,11 +208,7 @@ def modeled_well_path(project, case, view, testmodels):
         geometry.append_well_target(target)
     geometry.update()
     _hide_grid(view)
-    points = [
-        (reference[0] + dx, reference[1] + dy, -(reference[2] + dz))
-        for dx, dy, dz in targets
-    ]
-    _look_at_points(view, case, points, margin=1.5)
+    view.set_camera(azimuth=0.0, tilt=59.0)
 
 
 @feature("well_path_from_points", TEST10K)
@@ -307,7 +224,7 @@ def well_path_from_points(project, case, view, testmodels):
         name="Point well", coordinates=points
     )
     _hide_grid(view)
-    _look_at_points(view, case, points, margin=1.5)
+    view.set_camera(azimuth=0.0, tilt=59.0)
 
 
 def _import_summary_only(project, view, testmodels):

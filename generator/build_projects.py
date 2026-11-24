@@ -65,7 +65,8 @@ def main():
     names = sorted(n for n in FEATURES if pattern.search(f"TestCase_{n}"))
 
     failed = []
-    resinsight = rips.Instance.launch(console=True)
+    # set_camera needs a viewer, so run the GUI (under xvfb) instead of console mode
+    resinsight = rips.Instance.launch(console=False)
     try:
         for name in names:
             try:
