@@ -17,8 +17,11 @@ TEST10K_WELLPATH = "TEST10K_FLT_LGR_NNC/wellpath_a.dev"
 SUMMARY = "flow_diagnostics_test/SIMPLE_SUMMARY2.SMSPEC"
 
 
-def feature(name, model=SPE1):
+def feature(name, model=SPE1, hide_cells=False):
+    """Register a feature. hide_cells switches off the Grids object, like Hide Cells in the toolbar."""
+
     def register(func):
+        func.hide_cells = hide_cells
         FEATURES[name] = (func, model)
         return func
 
@@ -32,19 +35,6 @@ def _show_pressure(view):
 
 
 Z_SCALE = 5.0
-
-
-def _hide_grid(view):
-    # Keep a single corner cell so that only well paths and intersections remain visible
-    cell_filters = view.descendants(rips.CellFilterCollection)[0]
-    cell_range = cell_filters.add_new_object(rips.CellRangeFilter)
-    cell_range.start_index_i = 1
-    cell_range.start_index_j = 1
-    cell_range.start_index_k = 1
-    cell_range.cell_count_i = 1
-    cell_range.cell_count_j = 1
-    cell_range.cell_count_k = 1
-    cell_range.update()
 
 
 def _intersect_well(view, well_path):
@@ -191,9 +181,9 @@ def well_path_import(project, case, view, testmodels):
     view.set_camera(azimuth=0.0, tilt=59.0)
 
 
-@feature("modeled_well_path", TEST10K)
+@feature("modeled_well_path", TEST10K, hide_cells=True)
 def modeled_well_path(project, case, view, testmodels):
-    """Modeled well path with three targets; grid hidden with a cell range filter."""
+    """Modeled well path with three targets; cells hidden, with a well path intersection."""
     _show_pressure(view)
     collection = project.well_path_collection()
     well_path = collection.add_new_object(rips.ModeledWellPath)
@@ -201,29 +191,31 @@ def modeled_well_path(project, case, view, testmodels):
     well_path.update()
     geometry = well_path.well_path_geometry()
     reference = geometry.reference_point
-    reference[0], reference[1], reference[2] = 3736.27, 4630.61, 4133.5
+    x, y, z, bbox = _box_center(case)
+    reference[0], reference[1], reference[2] = x - 300, y - 200, -z - 20
     geometry.update()
     targets = [[0, 0, 0], [300, 200, 50], [600, 400, 120]]
     for target in targets:
         geometry.append_well_target(target)
     geometry.update()
-    _hide_grid(view)
+    _intersect_well(view, well_path)
     view.set_camera(azimuth=0.0, tilt=59.0)
 
 
-@feature("well_path_from_points", TEST10K)
+@feature("well_path_from_points", TEST10K, hide_cells=True)
 def well_path_from_points(project, case, view, testmodels):
-    """Well path imported from a list of points; grid hidden with a cell range filter."""
+    """Well path imported from a list of points; cells hidden, with a well path intersection."""
     _show_pressure(view)
     collection = project.well_path_collection()
+    x, y, z, bbox = _box_center(case)
     points = [
-        [3736.0 + 30 * i, 4630.0 + 20 * i, -4130.0 - 10 * i + math.sin(i) * 5]
+        [x - 300 + 40 * i, y - 200 + 30 * i, z + 10 - 4 * i + math.sin(i) * 3]
         for i in range(15)
     ]
     well_path = collection.import_well_path_from_points(
         name="Point well", coordinates=points
     )
-    _hide_grid(view)
+    _intersect_well(view, well_path)
     view.set_camera(azimuth=0.0, tilt=59.0)
 
 

@@ -38,6 +38,8 @@ def build_case(resinsight, name, testmodels):
     build(project, case, view, testmodels)
     project.save(str(rsp))
     _enable_time_axis_auto_zoom(rsp)
+    if build.hide_cells:
+        _hide_cells(rsp)
 
 
 def _enable_time_axis_auto_zoom(rsp: Path):
@@ -52,6 +54,27 @@ def _enable_time_axis_auto_zoom(rsp: Path):
     )
     if fixed != text:
         rsp.write_text(fixed)
+
+
+def _hide_cells(rsp: Path):
+    """Switch off the Grids and Faults objects in the project tree, like Hide Cells in the toolbar. The setting is not
+    available in rips, so it is changed in the saved project."""
+    text = rsp.read_text()
+    fixed, count = re.subn(
+        r"(<GridCollection>\s*<GridCollection>\s*<IsActive>)True( ?</IsActive>)",
+        r"\1False\2",
+        text,
+    )
+    if count == 0:
+        raise RuntimeError(f"No GridCollection found in {rsp}")
+    fixed, count = re.subn(
+        r"(<FaultCollection>\s*<Faults>\s*<Active>)True( ?</Active>)",
+        r"\1False\2",
+        fixed,
+    )
+    if count == 0:
+        raise RuntimeError(f"No FaultCollection found in {rsp}")
+    rsp.write_text(fixed)
 
 
 def main():
