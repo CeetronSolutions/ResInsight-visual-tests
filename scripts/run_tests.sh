@@ -10,7 +10,7 @@ FILTER="${1:-}"
 # Generated .rsp files embed absolute TestModels paths
 # A feature that cannot be built must not hide the others: run the rest, then fail
 build_failed=0
-python generator/build_projects.py --testmodels "$PWD/testmodels/TestModels" ${FILTER:+--cases "$FILTER"} || build_failed=1
+xvfb-run -a python generator/build_projects.py --testmodels "$PWD/testmodels/TestModels" ${FILTER:+--cases "$FILTER"} || build_failed=1
 
 # The runner has no command line filter: run on a folder of symlinks to the selected
 # cases. Images are written through the links into cases/.
