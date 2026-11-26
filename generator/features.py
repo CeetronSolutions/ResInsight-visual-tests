@@ -204,7 +204,7 @@ def well_path_import(project, case, view, testmodels):
     project.import_well_paths([str(testmodels / TEST10K_WELLPATH)])
     well_path = project.well_paths()[0]
     _intersect_well(view, well_path)
-    _look_at(view, well_path)
+    view.set_camera(azimuth=0.0, tilt=59.0)
 
 
 @feature("modeled_well_path", TEST10K)
@@ -244,7 +244,7 @@ def well_path_from_points(project, case, view, testmodels):
         name="Point well", coordinates=points
     )
     _intersect_well(view, well_path)
-    _look_at(view, well_path)
+    view.set_camera(azimuth=0.0, tilt=59.0)
 
 
 def _import_summary_only(project, view, testmodels):
