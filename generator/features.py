@@ -43,6 +43,14 @@ def _hide_cells(view):
 Z_SCALE = 5.0
 
 
+def _update_and_fit(view):
+    """Update the view and fit the camera. The view refits the camera asynchronously after some changes,
+    so wait to make the saved camera independent of timing."""
+    view.update()
+    time.sleep(3)
+    view.zoom_all()
+
+
 def _intersect_well(view, well_path):
     collection = view.descendants(rips.IntersectionCollection)[0]
     intersection = collection.add_new_object(rips.CurveIntersection)
@@ -71,31 +79,28 @@ def grid_default(project, case, view, testmodels):
 def background_color(project, case, view, testmodels):
     """View background color set to #3388AA."""
     view.background_color = "#3388AA"
-    view.update()
+    _update_and_fit(view)
 
 
 @feature("grid_box_hidden")
 def grid_box_hidden(project, case, view, testmodels):
     """Grid box (axes) hidden with show_grid_box = False."""
     view.show_grid_box = False
-    view.update()
+    _update_and_fit(view)
 
 
 @feature("z_scale")
 def z_scale(project, case, view, testmodels):
     """Z scale set to 1 instead of the default 5."""
     view.grid_z_scale = Z_SCALE
-    view.update()
-    # Changing the z scale refits the camera asynchronously; wait so the saved camera does not depend on timing
-    time.sleep(3)
-    view.zoom_all()
+    _update_and_fit(view)
 
 
 @feature("disable_lighting")
 def disable_lighting(project, case, view, testmodels):
     """Lighting disabled with disable_lighting = True."""
     view.disable_lighting = True
-    view.update()
+    _update_and_fit(view)
 
 
 @feature("cell_result_dynamic", TEST10K)
