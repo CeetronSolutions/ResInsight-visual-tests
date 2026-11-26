@@ -6,7 +6,6 @@ the nightly workflow; the first run reports missing_base until references are pr
 """
 
 import math
-import time
 
 import rips
 
@@ -43,31 +42,12 @@ def _hide_cells(view):
 Z_SCALE = 5.0
 
 
-def _look_at(view, obj, azimuth=0.0, tilt=59.0, zoom=None):
-    """Fly to the object, wait for the animation to finish and orient the camera around it."""
-    view.fly_to_object(obj)
-    time.sleep(3)
-    if zoom is None:
-        view.set_camera(azimuth=azimuth, tilt=tilt)
-    else:
-        view.set_camera(azimuth=azimuth, tilt=tilt, zoom=zoom)
-
-
-def _look_at_well_path(view, well_path, start_md, length=750.0):
-    """Fly to a well path, which cannot be a fly-to target itself, via a perforation interval that stays in the view."""
-    interval = well_path.append_perforation_interval(start_md=start_md, end_md=start_md + length, diameter=0.2, skin_factor=0.0)
-    view.fly_to_object(interval)
-    time.sleep(10)
-    view.update()
-
-
 def _intersect_well(view, well_path):
     collection = view.descendants(rips.IntersectionCollection)[0]
     intersection = collection.add_new_object(rips.CurveIntersection)
     intersection.type = "CS_WELL_PATH"
     intersection.well_path = well_path
     intersection.update()
-    return intersection
 
 
 def _box_center(case):
@@ -226,7 +206,8 @@ def modeled_well_path(project, case, view, testmodels):
         geometry.append_well_target(target)
     geometry.update()
     _intersect_well(view, well_path)
-    _look_at_well_path(view, well_path, start_md=-z - 20)
+    well_path.append_perforation_interval(start_md=-z - 20, end_md=-z + 730, diameter=0.2, skin_factor=0.0)
+    view.set_camera(azimuth=0.0, tilt=59.0, zoom=1.5)
 
 
 @feature("well_path_from_points", TEST10K)
