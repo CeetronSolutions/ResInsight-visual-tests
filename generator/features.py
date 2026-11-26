@@ -6,6 +6,7 @@ the nightly workflow; the first run reports missing_base until references are pr
 """
 
 import math
+import time
 
 import rips
 
@@ -85,6 +86,9 @@ def z_scale(project, case, view, testmodels):
     """Z scale set to 1 instead of the default 5."""
     view.grid_z_scale = Z_SCALE
     view.update()
+    # Changing the z scale refits the camera asynchronously; wait so the saved camera does not depend on timing
+    time.sleep(3)
+    view.zoom_all()
 
 
 @feature("disable_lighting")
