@@ -17,11 +17,10 @@ TEST10K_WELLPATH = "TEST10K_FLT_LGR_NNC/wellpath_a.dev"
 SUMMARY = "flow_diagnostics_test/SIMPLE_SUMMARY2.SMSPEC"
 
 
-def feature(name, model=SPE1, hide_cells=False):
-    """Register a feature. hide_cells switches off the Grids object, like Hide Cells in the toolbar."""
+def feature(name, model=SPE1):
+    """Register a feature."""
 
     def register(func):
-        func.hide_cells = hide_cells
         FEATURES[name] = (func, model)
         return func
 
@@ -32,6 +31,12 @@ def _show_pressure(view):
     # SOIL is zero at the first time step and shows nothing
     view.apply_cell_result("DYNAMIC_NATIVE", "PRESSURE")
     view.update()
+
+
+def _hide_cells(view):
+    """Like Hide Cells in the toolbar: hide grid cells and faults."""
+    view.set_grid_cells_visible(False)
+    view.set_faults_visible(False)
 
 
 Z_SCALE = 5.0
@@ -181,10 +186,11 @@ def well_path_import(project, case, view, testmodels):
     view.set_camera(azimuth=0.0, tilt=59.0)
 
 
-@feature("modeled_well_path", TEST10K, hide_cells=True)
+@feature("modeled_well_path", TEST10K)
 def modeled_well_path(project, case, view, testmodels):
     """Modeled well path with three targets; cells hidden, with a well path intersection."""
     _show_pressure(view)
+    _hide_cells(view)
     collection = project.well_path_collection()
     well_path = collection.add_new_object(rips.ModeledWellPath)
     well_path.name = "Modeled well"
@@ -202,10 +208,11 @@ def modeled_well_path(project, case, view, testmodels):
     view.set_camera(azimuth=0.0, tilt=59.0)
 
 
-@feature("well_path_from_points", TEST10K, hide_cells=True)
+@feature("well_path_from_points", TEST10K)
 def well_path_from_points(project, case, view, testmodels):
     """Well path imported from a list of points; cells hidden, with a well path intersection."""
     _show_pressure(view)
+    _hide_cells(view)
     collection = project.well_path_collection()
     x, y, z, bbox = _box_center(case)
     points = [
