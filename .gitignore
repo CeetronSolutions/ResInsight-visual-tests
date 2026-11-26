@@ -1,4 +1,5 @@
 cases/*/RegressionTest.rsp
+cases/*/RegressionTest.rspdb
 cases/*/RegTestGeneratedImages/
 cases/*/RegTestDiffImages/
 cases/*/RegTestGeneratedFiles/
